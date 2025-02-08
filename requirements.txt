@@ -1,18 +1,16 @@
 fastapi
 uvicorn
-transformers==4.31.0
 torch>=2.0.0
 redis
 pydantic
 prometheus_client
 # milvus
+numpy<2.0.0
 faiss-gpu
 hdbscan
 pyjwt
-numpy
 kubernetes
 httpx
-pymilvus
 
 # LoRA/PEFT関連
 peft
