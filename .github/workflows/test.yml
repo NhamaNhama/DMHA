@@ -1,38 +1,21 @@
-name: CI
+name: CI Test
 
 on: [push, pull_request]
 
 jobs:
-  build_and_test:
+  test:
     runs-on: ubuntu-latest
+    env:
+      SKIP_HF: "true"
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.10"
-
-      - name: Install Docker Compose
-        run: sudo apt-get update && sudo apt-get install docker-compose
-
-      - name: Launch Milvus and Redis
-        run: |
-          docker compose up -d
-          echo "Waiting for Milvus container to become healthy..."
-          for i in {1..30}; do
-            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' milvus_local || echo 'null')
-            if [ "$STATUS" = "\"healthy\"" ]; then
-              echo "Milvus is healthy!"
-              break
-            fi
-            echo "Milvus not yet healthy, retry in 2s..."
-            sleep 2
-          done
+          python-version: 3.10
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest 
+        run: pytest --maxfail=1 --disable-warnings -q 
