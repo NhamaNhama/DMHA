@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from app.api_service import APIService
 from app.context_system import ContextAwareSystem
 from app.config import Config
+from unittest.mock import patch
 
 # ContextAwareSystem のモックインスタンスを作る例。実際の実装に合せて修正してください。
 class MockSystem(ContextAwareSystem):
@@ -16,7 +17,8 @@ class MockSystem(ContextAwareSystem):
         super().__init__(mock_config)
         # 上記を実行することで self._inference_engine 等が正しく初期化される
 
-def test_contextualize_endpoint():
+@patch("pymilvus.connections.connect")
+def test_contextualize_endpoint(mock_connect):
     # モックシステムで APIService を初期化し、テストクライアントを生成
     mock_system = MockSystem()
     api_service = APIService(system=mock_system)
