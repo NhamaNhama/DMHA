@@ -20,7 +20,16 @@ jobs:
       - name: Launch Milvus and Redis
         run: |
           docker compose up -d
-          # 必要に応じてヘルスチェック待ちなどを実行
+          echo "Waiting for Milvus container to become healthy..."
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' milvus_local || echo 'null')
+            if [ "$STATUS" = "\"healthy\"" ]; then
+              echo "Milvus is healthy!"
+              break
+            fi
+            echo "Milvus not yet healthy, retry in 2s..."
+            sleep 2
+          done
 
       - name: Install dependencies
         run: pip install -r requirements.txt
