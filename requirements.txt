@@ -12,6 +12,7 @@ pyjwt
 numpy
 kubernetes
 httpx
+pymilvus
 
 # LoRA/PEFT関連
 peft
