@@ -4,6 +4,7 @@ from prometheus_client import start_http_server, Summary, Gauge, Counter
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 from redis import Redis
 import os
+from unittest.mock import MagicMock
 
 from .config import Config
 from .meta_cognition import MetaCognitionModule
@@ -34,11 +35,15 @@ class ContextAwareSystem:
         self.logger.info(f"Using device: {device}")
 
         # TorchScriptモデルをロード(失敗時は生モデル)
-        self.model = load_and_torchscript_model(
-            model_name=config.model_name,
-            device=device,
-            script_path=config.torchscript_path
-        )
+        if os.environ.get("SKIP_HF", "false").lower() == "true":
+            self.model = MagicMock()
+            print("Skipping Hugging Face model download due to SKIP_HF environment variable.")
+        else:
+            self.model = load_and_torchscript_model(
+                model_name=config.model_name,
+                device=device,
+                script_path=config.torchscript_path
+            )
 
         self._init_milvus_collections()
 
