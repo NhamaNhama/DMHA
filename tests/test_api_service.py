@@ -17,7 +17,7 @@ class MockSystem(ContextAwareSystem):
         super().__init__(mock_config)
         # 上記を実行することで self._inference_engine 等が正しく初期化される
 
-@patch("app.utils.torchscript_utils.load_and_torchscript_model")
+@patch("app.context_system.load_and_torchscript_model")
 @patch("pymilvus.connections.connect")
 def test_contextualize_endpoint(mock_milvus_connect, mock_model_loader):
     """
