@@ -5,7 +5,7 @@ torch>=2.0.0
 redis
 pydantic
 prometheus_client
-milvus
+# milvus
 faiss-gpu
 hdbscan
 pyjwt
@@ -16,3 +16,8 @@ httpx
 # LoRA/PEFT関連
 peft
 accelerate
+
+# 省略可能な既存パッケージ類はコメント扱い
+# ...
+# ...
+# そのほか既存の記述は省略

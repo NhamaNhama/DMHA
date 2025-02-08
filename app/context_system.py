@@ -1,7 +1,7 @@
 import logging
 import torch
 from prometheus_client import start_http_server, Summary, Gauge, Counter
-from milvus import Milvus, MetricType
+from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 from redis import Redis
 
 from .config import Config
@@ -23,7 +23,11 @@ class ContextAwareSystem:
         self.metrics = self._setup_metrics()
 
         self.redis = Redis(host=config.redis_host, decode_responses=True)
-        self.milvus = Milvus(host=config.milvus_host)
+        self.milvus = connections.connect(
+            alias="default",
+            host=config.milvus_host,
+            port="19530"
+        )
 
         device = torch.device("cuda" if (config.use_gpu and torch.cuda.is_available()) else "cpu")
         self.logger.info(f"Using device: {device}")
