@@ -84,7 +84,7 @@ class ContextAwareSystem:
         collection_params = {
             "fields": [
                 {"name": "id", "type": "int64", "is_primary": True},
-                {"name": "embedding", "type": "float_vector", "dim": 4096, "metric_type": MetricType.L2},
+                {"name": "embedding", "type": "float_vector", "dim": 4096},
                 {"name": "timestamp", "type": "int64"},
                 {"name": "entity_tags", "type": "json"},
                 {"name": "semantic_cluster", "type": "int16"}
