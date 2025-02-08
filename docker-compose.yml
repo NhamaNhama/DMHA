@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: milvus_local
+    ports:
+      - "19530:19530"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19530"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    # Milvus の永続化や設定ファイルが必要であれば volumes や environment を追加してください。
+
+  # 任意で Redis を同時起動する例
+  redis:
+    image: redis:latest
+    container_name: redis_local
+    ports:
+      - "6379:6379" 
