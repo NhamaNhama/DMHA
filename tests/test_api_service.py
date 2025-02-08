@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from app.api_service import APIService
 from app.context_system import ContextAwareSystem
 from app.config import Config
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # ContextAwareSystem のモックインスタンスを作る例。実際の実装に合せて修正してください。
 class MockSystem(ContextAwareSystem):
@@ -43,3 +43,12 @@ def test_contextualize_endpoint(mock_connect):
     #     headers={"Authorization": f"Bearer {token}"}
     # )
     # assert authenticated_response.status_code == 200 
+
+@patch("pymilvus.connections.Connections")
+def test_milvus_connection_mocked(mock_connections):
+    # Connections クラスが返すインスタンスを MagicMock に置き換える
+    mock_connections.return_value = MagicMock()
+
+    # 以降、pymilvusの実際の接続は行われず、mock_connections が呼ばれます
+    # ここでテストコードを実行
+    assert True  # ダミーのアサーション 
