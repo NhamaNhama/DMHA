@@ -4,7 +4,7 @@ import numpy as np
 import logging
 from typing import Optional
 from redis import Redis
-from milvus import Milvus
+from pymilvus import connections, Collection
 import faiss
 import hdbscan
 
@@ -13,9 +13,14 @@ class MemoryManager:
     Redis (短期メモリ) + Milvus (長期メモリ) + Faiss/HDBSCANクラスタリング
     """
 
-    def __init__(self, redis: Redis, milvus: Milvus, logger: logging.Logger, cluster_method: str = "faiss"):
+    def __init__(self, redis: Redis, logger: logging.Logger, cluster_method: str = "faiss", milvus_host: str = "localhost"):
         self.redis = redis
-        self.milvus = milvus
+        # pymilvus の接続設定例
+        connections.connect(
+            alias="default",
+            host=milvus_host,
+            port="19530"
+        )
         self.logger = logger
         self.cache_ttl = 3600
         self.cluster_method = cluster_method
@@ -24,6 +29,9 @@ class MemoryManager:
         self.faiss_index = None
         self.cluster_model = None
         self.hdbscan_embeddings_key = "hdbscan_temp_embeddings"
+
+        # すでに作成済みのコレクションを取得（別途 create_collection などで生成済み想定）
+        self.long_term_memory_collection = Collection("long_term_memory", using="default")
 
         if self.cluster_method == "faiss":
             self._init_faiss_index()
@@ -81,7 +89,12 @@ class MemoryManager:
                     "semantic_cluster": cluster_id
                 }
                 records.append(record)
-            self.milvus.insert("long_term_memory", records)
+
+            # PyMilvus 用の insert
+            self.long_term_memory_collection.insert(records)
+            # flush して確定（大規模環境では必要に応じて load/flush を管理）
+            self.long_term_memory_collection.flush()
+
         except Exception as e:
             self.logger.error(f"Error in _update_long_term_memory: {str(e)}")
 
