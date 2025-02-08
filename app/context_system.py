@@ -3,6 +3,7 @@ import torch
 from prometheus_client import start_http_server, Summary, Gauge, Counter
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 from redis import Redis
+import os
 
 from .config import Config
 from .meta_cognition import MetaCognitionModule
@@ -125,3 +126,17 @@ class ContextAwareSystem:
             )
         except Exception as e:
             self.logger.error(f"Failed to scale deployment: {str(e)}")
+
+    def connect_to_milvus(self):
+        # 実接続は SKIP_MILVUS が "true" でない場合にのみ実行
+        if os.environ.get("SKIP_MILVUS", "false").lower() == "true":
+            print("Skipping real Milvus connection due to SKIP_MILVUS env.")
+        else:
+            print("Connecting to Milvus...")
+            connections.connect(
+                alias=self.config.milvus_alias,
+                host=self.config.milvus_host,
+                port=self.config.milvus_port,
+                user=self.config.milvus_user,
+                password=self.config.milvus_password,
+            )
