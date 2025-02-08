@@ -56,7 +56,7 @@ class APIService:
         return payload
 
     def _setup_routes(self):
-        @self.app.post("/v1/contextualize", response_model=ContextResponse)
+        @self.app.post("/v1/contextualize", response_model=self.ContextResponse)
         async def process_request(
             request: self.ContextRequest,
             raw_token: str = Depends(self._token_auth_scheme)
