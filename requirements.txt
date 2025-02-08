@@ -16,6 +16,8 @@ httpx
 peft
 accelerate
 
+pymilvus
+
 # 省略可能な既存パッケージ類はコメント扱い
 # ...
 # ...
