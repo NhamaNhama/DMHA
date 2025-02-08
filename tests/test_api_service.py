@@ -1,12 +1,20 @@
 from fastapi.testclient import TestClient
 from app.api_service import APIService
 from app.context_system import ContextAwareSystem
+from app.config import Config
 
 # ContextAwareSystem のモックインスタンスを作る例。実際の実装に合せて修正してください。
 class MockSystem(ContextAwareSystem):
     def __init__(self):
-        # 親クラスの初期化などを必要に応じて実行
-        pass
+        mock_config = Config()
+        # 必要に応じて最低限の項目を設定
+        mock_config.redis_host = "localhost"
+        mock_config.milvus_host = "localhost"
+        mock_config.use_gpu = False
+        # ... （setupが必要な場合は適宜追加）
+
+        super().__init__(mock_config)
+        # 上記を実行することで self._inference_engine 等が正しく初期化される
 
 def test_contextualize_endpoint():
     # モックシステムで APIService を初期化し、テストクライアントを生成
