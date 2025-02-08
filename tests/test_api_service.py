@@ -17,38 +17,31 @@ class MockSystem(ContextAwareSystem):
         super().__init__(mock_config)
         # 上記を実行することで self._inference_engine 等が正しく初期化される
 
+@patch("app.utils.torchscript_utils.load_and_torchscript_model")
 @patch("pymilvus.connections.connect")
-def test_contextualize_endpoint(mock_connect):
-    # モックシステムで APIService を初期化し、テストクライアントを生成
+def test_contextualize_endpoint(mock_milvus_connect, mock_model_loader):
+    """
+    Milvus 接続と Hugging Face ダウンロード(load_and_torchscript_model)をモック化して
+    Gated Repo へのアクセスと Milvus retryを回避。
+    """
+    # Milvus の connect() をモック
+    mock_milvus_connect.return_value = MagicMock()
+    # HFモデル読み込みもモック
+    mock_model_loader.return_value = MagicMock()
+
     mock_system = MockSystem()
     api_service = APIService(system=mock_system)
     client = TestClient(api_service.app)
 
-    # テスト用のリクエスト
-    # 実際にはトークンが必要な場合があるので、その場合はヘッダに Bearer トークンを付与してください
     response = client.post("/v1/contextualize", json={
         "session_id": "test_session",
         "text": "Hello, DMHA!"
     })
+    # 認証がない想定で 401 などのレスポンスチェック
+    assert response.status_code == 401
 
-    # 予想されるステータスコードやレスポンス構造を検証
-    assert response.status_code == 401, "未認証の場合の応答コードを想定"
-
-    # 必要に応じてトークンを発行し、認証付きで再テストする例：
-    # token_response = client.post("/auth/token", params={"username": "testuser"})
-    # token = token_response.json()["access_token"]
-    # authenticated_response = client.post(
-    #     "/v1/contextualize",
-    #     json={"session_id": "test_session", "text": "Hello with token!"},
-    #     headers={"Authorization": f"Bearer {token}"}
-    # )
-    # assert authenticated_response.status_code == 200 
-
-@patch("pymilvus.connections.Connections")
-def test_milvus_connection_mocked(mock_connections):
-    # Connections クラスが返すインスタンスを MagicMock に置き換える
-    mock_connections.return_value = MagicMock()
-
-    # 以降、pymilvusの実際の接続は行われず、mock_connections が呼ばれます
-    # ここでテストコードを実行
-    assert True  # ダミーのアサーション 
+@patch("pymilvus.connections.connect")
+def test_milvus_connection_mocked(mock_milvus_connect):
+    mock_milvus_connect.return_value = MagicMock()
+    # 実際の接続は行われず、mock_milvus_connect が呼ばれる
+    assert True 
