@@ -22,3 +22,11 @@ pymilvus
 # ...
 # ...
 # そのほか既存の記述は省略
+
+import os
+from unittest.mock import MagicMock
+
+if os.environ.get("SKIP_HF", "false").lower() == "true":
+   self.model = MagicMock()
+else:
+   self.model = load_and_torchscript_model(...)
