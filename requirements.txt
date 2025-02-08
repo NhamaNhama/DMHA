@@ -11,6 +11,7 @@ hdbscan
 pyjwt
 numpy
 kubernetes
+httpx
 
 # LoRA/PEFT関連
 peft
