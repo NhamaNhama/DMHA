@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+transformers==4.31.0
+torch>=2.0.0
+redis
+pydantic
+prometheus_client
+milvus
+faiss-gpu
+hdbscan
+pyjwt
+numpy
+kubernetes
+
+# LoRA/PEFT関連
+peft
+accelerate
