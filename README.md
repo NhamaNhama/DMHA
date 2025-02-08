@@ -1,4 +1,4 @@
-# DMHA (Dynamic Memory Hierarchy Architecture) プロジェクト
+# DMHA (Dynamic Memory Hierarchy Architecture) の提案
 
 本リポジトリは、大規模言語モデル (LLM) を用いた長期文脈管理と論理的一貫性の自己修正を目的とする、新しいアーキテクチャ DMHA (Dynamic Memory Hierarchy Architecture) の実装を集約している。Redis・Milvus・Faiss/HDBSCAN・PyTorch・FastAPI・LoRA (PEFT) などを組み合わせることで、長期記憶に相当する大規模履歴の管理とメタ認知制御、さらには神経シンボリック推論を融合し、高度な知的対話を実現することを狙っている。
 
