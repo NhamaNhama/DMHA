@@ -22,3 +22,9 @@ pymilvus
 # ...
 # ...
 # そのほか既存の記述は省略
+
+@patch("transformers.AutoModelForCausalLM.from_pretrained", return_value=MagicMock())
+@patch("pymilvus.connections.connect", return_value=MagicMock())
+def test_contextualize_endpoint(mock_milvus, mock_hf):
+    # ここで ContextAwareSystem() を生成しても from_pretrained はモックされる
+    mock_system = MockSystem()
