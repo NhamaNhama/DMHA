@@ -4,7 +4,6 @@ from prometheus_client import start_http_server, Summary, Gauge, Counter
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 from redis import Redis
 import os
-from unittest.mock import MagicMock
 
 from .config import Config
 from .meta_cognition import MetaCognitionModule
@@ -34,16 +33,12 @@ class ContextAwareSystem:
         device = torch.device("cuda" if (config.use_gpu and torch.cuda.is_available()) else "cpu")
         self.logger.info(f"Using device: {device}")
 
-        # TorchScriptモデルをロード(失敗時は生モデル)
-        if os.environ.get("SKIP_HF", "false").lower() == "true":
-            self.model = MagicMock()
-            print("Skipping Hugging Face model download due to SKIP_HF environment variable.")
-        else:
-            self.model = load_and_torchscript_model(
-                model_name=config.model_name,
-                device=device,
-                script_path=config.torchscript_path
-            )
+        # TorchScriptモデルをロード (SKIP_HF の分岐を削除し、通常時にも毎回実行)
+        self.model = load_and_torchscript_model(
+            model_name=config.model_name,
+            device=device,
+            script_path=config.torchscript_path
+        )
 
         self._init_milvus_collections()
 
@@ -98,10 +93,8 @@ class ContextAwareSystem:
             "segment_row_limit": 4096,
             "auto_id": False
         }
-        try:
+        if not self.milvus.has_collection("long_term_memory"):
             self.milvus.create_collection("long_term_memory", collection_params)
-        except Exception as e:
-            self.logger.info(f"Milvus collection creation skipped or failed: {str(e)}")
 
     def get_inference_engine(self) -> InferenceEngine:
         if self._inference_engine is None:
@@ -139,9 +132,27 @@ class ContextAwareSystem:
         else:
             print("Connecting to Milvus...")
             connections.connect(
-                alias=self.config.milvus_alias,
+                alias="default",
                 host=self.config.milvus_host,
-                port=self.config.milvus_port,
-                user=self.config.milvus_user,
-                password=self.config.milvus_password,
+                port="19530"
             )
+
+    def trigger_online_learning(self, training_data):
+        """
+        training_data: オンライン学習に必要となるデータ（例: 会話履歴や追加アノテーション）など。
+        """
+        if not self.online_learner:
+            self.logger.warning("オンライン学習が有効ではありません。config.online_learning_enabled を確認してください。")
+            return
+
+        # データのバリデーション
+        if not training_data or len(training_data) == 0:
+            self.logger.error("学習データが空、または無効です。")
+            return
+
+        try:
+            # 実際のオンライン学習を実施
+            learning_result = self.online_learner.train(training_data)
+            self.logger.info(f"オンライン学習が成功しました。結果: {learning_result}")
+        except Exception as e:
+            self.logger.error(f"オンライン学習中にエラーが発生しました: {str(e)}")

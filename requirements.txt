@@ -18,6 +18,9 @@ accelerate
 
 pymilvus
 
+# PostgreSQL 接続用ライブラリ (例)
+psycopg2-binary
+
 # 省略可能な既存パッケージ類はコメント扱い
 # ...
 # ...
