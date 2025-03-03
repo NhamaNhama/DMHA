@@ -1,53 +1,80 @@
 from fastapi.testclient import TestClient
+import os
+import torch
 from app.api_service import APIService
 from app.context_system import ContextAwareSystem
 from app.config import Config
 from unittest.mock import patch, MagicMock
+from app.utils.torchscript_utils import load_and_torchscript_model
 
-# ContextAwareSystem のモックインスタンスを作る例。実際の実装に合せて修正してください。
-class MockSystem(ContextAwareSystem):
+# 実際のContextAwareSystemを使用するが、必要最小限の設定を行う
+class TestContextSystem(ContextAwareSystem):
     def __init__(self):
-        mock_config = Config()
-        # 必要に応じて最低限の項目を設定
-        mock_config.redis_host = "localhost"
-        mock_config.milvus_host = "localhost"
-        mock_config.use_gpu = False
-        # ... （setupが必要な場合は適宜追加）
+        # テスト用の設定を作成
+        test_config = Config()
+        # ローカル環境用の設定
+        test_config.redis_host = "localhost"
+        test_config.milvus_host = "localhost"
+        test_config.use_gpu = False
+        
+        # CIテスト環境ではオープンモデルを使用
+        if os.getenv("SKIP_HF", "false").lower() == "true":
+            # CIテスト環境では小さなオープンモデルを使用
+            test_config.model_name = "prajjwal1/bert-tiny"  # 小さなオープンモデル
+        else:
+            # ローカルテスト環境では設定通りのモデルを使用
+            pass
+            
+        # JWT認証のテスト用キー
+        test_config.jwt_secret = "test_secret_key"
+        
+        super().__init__(test_config)
 
-        super().__init__(mock_config)
-        # 上記を実行することで self._inference_engine 等が正しく初期化される
-
-@patch("app.context_system.load_and_torchscript_model")
+# Milvusの接続だけをモック化（実際のMilvusサーバーがない環境でもテスト可能に）
 @patch("pymilvus.connections.connect")
-@patch("transformers.AutoTokenizer.from_pretrained")  # AutoTokenizerもモック
-@patch("app.api_service.MemoryManager")  # MemoryManagerもモック
-def test_contextualize_endpoint(mock_memory_manager, mock_tokenizer, mock_milvus_connect, mock_model_loader):
+def test_contextualize_endpoint(mock_milvus_connect):
     """
-    Milvus 接続と Hugging Face ダウンロード(load_and_torchscript_model)をモック化して
-    Gated Repo へのアクセスと Milvus retryを回避。
+    contextualize エンドポイントのテスト
+    Milvus接続のみモック化し、それ以外は実際のコンポーネントを使用
     """
-    # Milvus の connect() をモック
+    # Milvusの接続をモック
     mock_milvus_connect.return_value = MagicMock()
-    # HFモデル読み込みもモック
-    mock_model_loader.return_value = MagicMock()
-    # Tokenizerもモック
-    mock_tokenizer.return_value = MagicMock()
-    # MemoryManagerもモック
-    mock_memory_manager.return_value = MagicMock()
-
-    mock_system = MockSystem()
-    api_service = APIService(system=mock_system)
+    
+    # テスト用のシステムを作成
+    test_system = TestContextSystem()
+    
+    # APIサービスを作成
+    api_service = APIService(system=test_system)
     client = TestClient(api_service.app)
-
+    
+    # 認証なしでリクエスト（401エラーを期待）
     response = client.post("/v1/contextualize", json={
         "session_id": "test_session",
         "text": "Hello, DMHA!"
     })
-    # 認証がない想定で 401 などのレスポンスチェック
+    
+    # 認証がない場合は401エラーを期待
+    assert response.status_code == 401
+    
+    # 無効なトークンでリクエスト（401エラーを期待）
+    response = client.post(
+        "/v1/contextualize", 
+        json={"session_id": "test_session", "text": "Hello, DMHA!"},
+        headers={"Authorization": "Bearer invalid_token"}
+    )
     assert response.status_code == 401
 
 @patch("pymilvus.connections.connect")
-def test_milvus_connection_mocked(mock_milvus_connect):
+def test_milvus_connection(mock_milvus_connect):
+    """Milvus接続のテスト"""
     mock_milvus_connect.return_value = MagicMock()
-    # 実際の接続は行われず、mock_milvus_connect が呼ばれる
-    assert True 
+    
+    # テスト用のシステムを作成
+    test_system = TestContextSystem()
+    
+    # Milvus接続が呼び出されたことを確認
+    mock_milvus_connect.assert_called_once()
+    
+    # システムが正しく初期化されたことを確認
+    assert test_system.redis is not None
+    assert test_system.config is not None 

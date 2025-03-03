@@ -13,6 +13,7 @@ kubernetes
 httpx
 pytest
 pytest-cov
+transformers>=4.30.0
 
 # LoRA/PEFT関連
 peft
