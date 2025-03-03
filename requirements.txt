@@ -11,6 +11,8 @@ hdbscan
 pyjwt
 kubernetes
 httpx
+pytest
+pytest-cov
 
 # LoRA/PEFT関連
 peft
