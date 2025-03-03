@@ -19,7 +19,9 @@ class MockSystem(ContextAwareSystem):
 
 @patch("app.context_system.load_and_torchscript_model")
 @patch("pymilvus.connections.connect")
-def test_contextualize_endpoint(mock_milvus_connect, mock_model_loader):
+@patch("transformers.AutoTokenizer.from_pretrained")  # AutoTokenizerもモック
+@patch("app.api_service.MemoryManager")  # MemoryManagerもモック
+def test_contextualize_endpoint(mock_memory_manager, mock_tokenizer, mock_milvus_connect, mock_model_loader):
     """
     Milvus 接続と Hugging Face ダウンロード(load_and_torchscript_model)をモック化して
     Gated Repo へのアクセスと Milvus retryを回避。
@@ -28,6 +30,10 @@ def test_contextualize_endpoint(mock_milvus_connect, mock_model_loader):
     mock_milvus_connect.return_value = MagicMock()
     # HFモデル読み込みもモック
     mock_model_loader.return_value = MagicMock()
+    # Tokenizerもモック
+    mock_tokenizer.return_value = MagicMock()
+    # MemoryManagerもモック
+    mock_memory_manager.return_value = MagicMock()
 
     mock_system = MockSystem()
     api_service = APIService(system=mock_system)
