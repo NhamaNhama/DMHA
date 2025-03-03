@@ -31,7 +31,7 @@ class APIService:
         self.inference_engine = self.system.get_inference_engine()
         self.memory_manager = MemoryManager(
             redis=self.system.redis,
-            milvus=self.system.milvus,
+            milvus_host=self.system.config.milvus_host,
             logger=self.system.logger,
             cluster_method=self.system.config.cluster_method
         )

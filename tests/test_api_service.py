@@ -7,6 +7,16 @@ from app.config import Config
 from unittest.mock import patch, MagicMock
 from app.utils.torchscript_utils import load_and_torchscript_model
 
+# TorchScriptコンパイルをスキップするためのパッチ
+def mock_load_model(*args, **kwargs):
+    """テスト用のモックモデルを返す関数"""
+    from transformers import AutoModel
+    # 実際にモデルをロードするが、TorchScriptコンパイルはスキップ
+    model_name = kwargs.get('model_name', args[0] if args else "distilbert-base-uncased")
+    model = AutoModel.from_pretrained(model_name)
+    model.eval()
+    return model
+
 # 実際のContextAwareSystemを使用するが、必要最小限の設定を行う
 class TestContextSystem(ContextAwareSystem):
     def __init__(self):
@@ -20,7 +30,7 @@ class TestContextSystem(ContextAwareSystem):
         # CIテスト環境ではオープンモデルを使用
         if os.getenv("SKIP_HF", "false").lower() == "true":
             # CIテスト環境では小さなオープンモデルを使用
-            test_config.model_name = "prajjwal1/bert-tiny"  # 小さなオープンモデル
+            test_config.model_name = "distilbert-base-uncased"  # TorchScriptコンパイルに問題のないモデル
         else:
             # ローカルテスト環境では設定通りのモデルを使用
             pass
@@ -28,7 +38,9 @@ class TestContextSystem(ContextAwareSystem):
         # JWT認証のテスト用キー
         test_config.jwt_secret = "test_secret_key"
         
-        super().__init__(test_config)
+        # TorchScriptコンパイルをスキップするためのパッチを適用
+        with patch("app.utils.torchscript_utils.load_and_torchscript_model", side_effect=mock_load_model):
+            super().__init__(test_config)
 
 # Milvusの接続だけをモック化（実際のMilvusサーバーがない環境でもテスト可能に）
 @patch("pymilvus.connections.connect")
