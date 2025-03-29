@@ -1,0 +1,30 @@
+fastapi
+uvicorn
+torch>=2.0.0
+redis
+pydantic
+prometheus_client
+# milvus
+numpy<2.0.0
+faiss-gpu
+hdbscan
+pyjwt
+kubernetes
+httpx
+pytest
+pytest-cov
+transformers>=4.30.0
+
+# LoRA/PEFT関連
+peft
+accelerate
+
+pymilvus
+
+# PostgreSQL 接続用ライブラリ (例)
+psycopg2-binary
+
+# 省略可能な既存パッケージ類はコメント扱い
+# ...
+# ...
+# そのほか既存の記述は省略
