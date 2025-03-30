@@ -6,7 +6,7 @@ from typing import Dict, Any
 @dataclass
 class Config:
     # 基本設定
-    model_name: str = os.getenv("MODEL_NAME", "meta-llama/Llama-2-7b-chat-hf")
+    model_name: str = os.getenv("MODEL_NAME", "bert-base-uncased")
     redis_host: str = os.getenv("REDIS_HOST", "redis")
     milvus_host: str = os.getenv("MILVUS_HOST", "milvus")
     use_gpu: bool = os.getenv("USE_GPU", "true").lower() == "true"

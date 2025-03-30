@@ -108,3 +108,17 @@ def test_milvus_connection(test_system):
     assert test_system.config is not None
     # Milvusはスキップされるはず
     assert test_system.config.skip_milvus == True
+
+
+@pytest.mark.usefixtures("mock_environment", "clean_registry")
+def test_api_service_initialization():
+    """APIService初期化のテスト"""
+    # セットアップ
+    mock_system = MagicMock()
+
+    # 実行
+    api_service = APIService(mock_system)
+
+    # 検証
+    assert api_service.system == mock_system
+    assert api_service.app is not None
